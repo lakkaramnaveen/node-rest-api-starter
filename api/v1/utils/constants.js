@@ -21,9 +21,13 @@ const SuccessMessages = Object.freeze({
   FETCHED_USER_DATA: "Fetched user data",
   UPDATED_USER_DATA: "Updated user data",
   RESENT_VERIFY_EMAIL: "Verification token has been resent to your email",
+  USERNAME_AVAILABLE: "Username available",
 });
 
 const errorMessages = Object.freeze({
+  UNAUTHORIZED: "Unauthorized",
+  SPECIFY_VALID_TOKEN: "Please specify valid token",
+  SPECIFY_VALID_HEADER: "Please specify valid auth header",
   FAILED: "failed",
   OTP_ALREADY_SENT:
     "We've already sent an OTP to the registered email, please try resend endpoint to get a new OTP.",
@@ -80,6 +84,8 @@ const errorMessages = Object.freeze({
     "password must contain at least one special character",
   USER_DATA_UPDATE_FAILED: "Failed to update user data",
   INTERNAL_SERVER_ERROR: "Internal server error",
+  INVALID_USERNAME: "Invalid username",
+  USERNAME_IN_USE: "Username taken",
 });
 
 const HEADERS_URLS = Object.freeze({

@@ -1,14 +1,6 @@
 const User = require("../models/user");
-const {
-  FAILED,
-  USER_NOT_EXISTS,
-  USER_DATA_UPDATE_FAILED,
-} = require("../utils/constants").errors;
-const {
-  SUCCESS,
-  FETCHED_USER_DATA,
-  UPDATED_USER_DATA,
-} = require("../utils/constants").successMessages;
+const Errors = require("../utils/constants").errors;
+const Success = require("../utils/constants").successMessages;
 const crypto = require("crypto");
 
 module.exports.createUser = async (userData) => {
@@ -27,8 +19,8 @@ module.exports.createUser = async (userData) => {
 };
 
 module.exports.getUser = async (req, res) => {
-  await User.findById(
-    req.tokenData.authId,
+  await User.findOne(
+    { userId: req.tokenData.authId },
     {
       _id: 0,
       createdAt: 0,
@@ -36,15 +28,15 @@ module.exports.getUser = async (req, res) => {
       __v: 0,
     },
     (error, user) => {
-      if (error) {
+      if (error || !user) {
         return res.status(403).json({
-          status: FAILED,
-          message: USER_NOT_EXISTS,
+          status: Errors.FAILED,
+          message: Errors.USER_NOT_EXISTS,
         });
       }
       return res.status(200).json({
-        status: SUCCESS,
-        message: FETCHED_USER_DATA,
+        status: Success.SUCCESS,
+        message: Success.FETCHED_USER_DATA,
         user: user,
       });
     }
@@ -52,24 +44,45 @@ module.exports.getUser = async (req, res) => {
 };
 
 module.exports.updateUser = async (req, res) => {
-  var user = await User.findById(req.tokenData.authId, {
-    createdAt: 0,
-    updatedAt: 0,
-    __v: 0,
-  });
+  var user = await User.findOne(
+    { userId: req.tokenData.authId },
+    {
+      createdAt: 0,
+      updatedAt: 0,
+      __v: 0,
+    }
+  );
   user = _updateUserModel(user, req.body);
   await user.save((error, updated) => {
-    if (error)
+    if (error || !updated)
       return res.status(403).json({
-        status: FAILED,
-        message: USER_DATA_UPDATE_FAILED,
+        status: Errors.FAILED,
+        message: Errors.USER_DATA_UPDATE_FAILED,
       });
     return res.status(200).json({
-      status: SUCCESS,
-      message: UPDATED_USER_DATA,
+      status: Success.SUCCESS,
+      message: Success.UPDATED_USER_DATA,
       user: updated,
     });
   });
+};
+
+module.exports.checkUsernameAvailability = async (req, res) => {
+  const user = await User.findOne(
+    { username: req.params.username },
+    { _id: 1 }
+  );
+  if (user) {
+    return res.status(409).json({
+      status: Errors.FAILED,
+      message: Errors.USERNAME_IN_USE,
+    });
+  } else {
+    return res.status(200).json({
+      status: Success.SUCCESS,
+      message: Success.USERNAME_AVAILABLE,
+    });
+  }
 };
 
 module.exports.deleteUser = async (authId) => {
@@ -100,15 +113,17 @@ function _isAllowed(key) {
 }
 
 module.exports.fetchNameOfUser = async function (email) {
+  var name = " ";
   await User.findOne({ email: email }, { firstName: 1, lastName: 1 })
     .then((document) => {
       if (!document) {
-        return " ";
+        name = " ";
       }
-      return document.firstName + " " + document.lastName;
+      name = document.firstName + " " + document.lastName;
     })
     .catch((err) => {
       console.log(err);
-      return " ";
+      name = " ";
     });
+  return name;
 };
